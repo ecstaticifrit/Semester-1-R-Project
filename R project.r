@@ -7,10 +7,6 @@ library(janitor) # for cleaning column names
 
 data <- read_excel("Components and Economic Activity of Domestic Products at Factor Cost - State Wise-(COMP_ECO_ACT_NSDP.xlsx")
 
-# delete all rows where value of STATE column is equal to "Delhi" or "Jammu & Kashmir"
-# data <- data %>%
-#   filter((STATE %in% c("Delhi", "Jammu & Kashmir") & STATE_LEVEL1 %in% c("Union Territories")) | !STATE_LEVEL1 %in% c("Union Territories"))
-
 # delete all rows where value of CLASSIFICATION BASED ON INDUSTRY column is equal to "NSVA at basic prices"
 data <- data %>%
   filter(`CLASSIFICATION BASED ON INDUSTRY` != "NSVA at basic prices")
@@ -98,18 +94,7 @@ df_clean_summary <- data %>%
     v_2022 = format(v_2022, scientific = FALSE, trim = TRUE)
   )
 
-
-
-
-
 View(df_clean_summary)
-
-
-
-
-
-# View(data)
-
 
 data2 <- read_excel("DQ_DBIE_Excel_17_8_2025_2130.xlsx")
 
@@ -125,10 +110,83 @@ data2 <- data2 %>%
     `VALUE in ACTUALS` = suppressWarnings(as.numeric(`VALUE in ACTUALS`))
   )
 
+# group data2 by states chronologically
 data2 <- data2 %>%
-  mutate(
-    YEAR = suppressWarnings(readr::parse_integer(as.character(YEAR))),
-    `VALUE in ACTUALS` = suppressWarnings(as.numeric(`VALUE in ACTUALS`))
-  ) %>%
-  filter(`PRICE TYPE` == "Current Prices")
+  arrange(STATE, YEAR)
 
+data2 <- data2 %>%
+  filter(`PRICE TYPE` != "Constant Price")
+
+data2 <- data2 %>%
+  filter(`PRICE TYPE` != "Constant Price")
+
+# filter out rows where year is between 2013 and 2024
+data2 <- data2 %>%
+  filter(YEAR >= 2013 & YEAR <= 2024)
+
+# add a row with YEAR 2024 for states which dont have 2024
+data2 <- data2 %>%
+  complete(STATE, YEAR = c(2013:2024))
+
+# get values of other columns from 2023 except year
+data2 <- data2 %>%
+  group_by(STATE) %>%
+  fill(everything(), .direction = "down") %>%
+  ungroup()
+
+# add a column named "CAGR" that calculates the compound annual growth rate of VALUE in ACTUALS for each state from 2013 to 2023
+data2 <- data2 %>%
+  group_by(STATE) %>%
+  mutate(
+    v_2013 = `VALUE in ACTUALS`[YEAR == 2013],
+    v_2024 = `VALUE in ACTUALS`[YEAR == 2024],
+    n_years = 2024 - 2013,                               # 12 years
+    CAGR = ifelse(!is.na(v_2013) & v_2013 > 0 & !is.na(v_2024) & v_2024 >= 0,
+                  (v_2024 / v_2013)^(1 / n_years) - 1,   # CAGR
+                  NA_real_)
+  ) %>%
+  ungroup()
+
+
+# for each state, calculate percentage change over 12 year period from 2013 to 2024 in per capita income of each state
+data2 <- data2 %>%
+  group_by(STATE) %>%
+  mutate(
+    perc_change_2013_2024 = ifelse(!is.na(v_2013) & v_2013 > 0 & !is.na(v_2024) & v_2024 >= 0,
+                                   (v_2024 - v_2013) / v_2013 * 100,
+                                   NA_real_)
+  ) %>%
+  ungroup()
+
+# for each state, calculate percentage change over 11 year period from 2013 to 2024 in per capita income
+data2 <- data2 %>%
+  group_by(STATE) %>%
+  mutate(
+    perc_change_2013_2024 = ifelse(!is.na(v_2013) & v_2013 > 0 & !is.na(v_2024) & v_2024 >= 0,
+                                   (v_2024 - v_2013) / v_2013 * 100,
+                                   NA_real_)
+  ) %>%
+  ungroup()
+
+
+# rename CAGR column to CAGR(%)
+data2 <- data2 %>%
+  rename(`CAGR(%)` = CAGR) %>%
+  mutate(`CAGR(%)` = `CAGR(%)` * 100)
+
+# rearrange data2. group by state and year. sort CAGR % in ascending order
+data2 <- data2 %>%
+  arrange(`CAGR(%)`,STATE, YEAR)
+
+
+# rearrange data2. group by state and year. sort CAGR % in ascending order
+data2 <- data2 %>%
+  arrange(`perc_change_2013_2024`,STATE, YEAR)
+
+
+View(data2)
+
+
+# save data and data2 in csv
+write.csv(df_clean_summary, "cleaned_sector_data.csv", row.names = FALSE)
+write.csv(data2, "cleaned_per_capita_income_data.csv", row.names = FALSE)
