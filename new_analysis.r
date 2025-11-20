@@ -78,7 +78,7 @@ ggplot(sector_share_top_bottom, aes(x = reorder(STATE, -pct), y = pct, fill = CL
   ) +
   theme_minimal()
 
-# 3. Grouped Bar Chart for Himalayan States Sector Shares
+# 3.1 Grouped Bar Chart for Himalayan States Sector Shares
 himalayan_states <- c("Sikkim", "Jammu Kashmir", "Arunachal Pradesh", "Himachal Pradesh", "Uttarakhand")
 
 region_data <- sectordata %>%
@@ -101,6 +101,92 @@ ggplot(region_data, aes(x = STATE, y = pct, fill = CLASSIFICATION.BASED.ON.SECTO
     fill = "Sector"
   ) +
   theme_minimal()
+
+
+# 3.2 Northern Plains
+northern_plains_states <- c("Punjab", "Haryana", "Uttar Pradesh", "Bihar", "Delhi")
+
+northern_plains_df <- sectordata %>%
+  filter(STATE %in% northern_plains_states &
+         `CLASSIFICATION.BASED.ON.SECTOR` %in% c("PRIMARY SECTOR", "SECONDARY SECTOR", "TERTIARY SECTOR")) %>%
+  group_by(STATE, `CLASSIFICATION.BASED.ON.SECTOR`) %>%
+  summarise(sector_total = sum(as.numeric(total_value_actuals), na.rm = TRUE), .groups = "drop") %>%
+  group_by(STATE) %>%
+  mutate(pct = sector_total / sum(sector_total) * 100) %>%
+  ungroup()
+
+ggplot(northern_plains_df, aes(x = STATE, y = pct, fill = `CLASSIFICATION.BASED.ON.SECTOR`)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = round(pct, 1)), position = position_dodge(width = 0.9), vjust = -0.25, size = 3) +
+  scale_fill_manual(values = c("PRIMARY SECTOR" = "brown", "SECONDARY SECTOR" = "blue", "TERTIARY SECTOR" = "green")) +
+  labs(title = "Sectoral Shares: Northern Plains",
+       x = "State", y = "Percentage", fill = "Sector") +
+  theme_minimal()
+
+
+# 3.3 Arid and Semi-Arid
+arid_semi_arid_states <- c("Rajasthan", "Gujarat", "Madhya Pradesh", "Chhattisgarh", "Jharkhand")
+
+arid_semi_arid_df <- sectordata %>%
+  filter(STATE %in% arid_semi_arid_states &
+         `CLASSIFICATION.BASED.ON.SECTOR` %in% c("PRIMARY SECTOR", "SECONDARY SECTOR", "TERTIARY SECTOR")) %>%
+  group_by(STATE, `CLASSIFICATION.BASED.ON.SECTOR`) %>%
+  summarise(sector_total = sum(as.numeric(total_value_actuals), na.rm = TRUE), .groups = "drop") %>%
+  group_by(STATE) %>%
+  mutate(pct = sector_total / sum(sector_total) * 100) %>%
+  ungroup()
+
+ggplot(arid_semi_arid_df, aes(x = STATE, y = pct, fill = `CLASSIFICATION.BASED.ON.SECTOR`)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = round(pct, 1)), position = position_dodge(width = 0.9), vjust = -0.25, size = 3) +
+  scale_fill_manual(values = c("PRIMARY SECTOR" = "brown", "SECONDARY SECTOR" = "blue", "TERTIARY SECTOR" = "green")) +
+  labs(title = "Sectoral Shares: Arid & Semi-Arid States",
+       x = "State", y = "Percentage", fill = "Sector") +
+  theme_minimal()
+
+
+# 3.4 Deccan, Coastal, Peninsular
+deccan_peninsular_states <- c("Maharashtra", "Goa", "Karnataka", "Andhra Pradesh", "Telangana", "Tamil Nadu", "Kerala")
+
+deccan_peninsular_df <- sectordata %>%
+  filter(STATE %in% deccan_peninsular_states &
+         `CLASSIFICATION.BASED.ON.SECTOR` %in% c("PRIMARY SECTOR", "SECONDARY SECTOR", "TERTIARY SECTOR")) %>%
+  group_by(STATE, `CLASSIFICATION.BASED.ON.SECTOR`) %>%
+  summarise(sector_total = sum(as.numeric(total_value_actuals), na.rm = TRUE), .groups = "drop") %>%
+  group_by(STATE) %>%
+  mutate(pct = sector_total / sum(sector_total) * 100) %>%
+  ungroup()
+
+ggplot(deccan_peninsular_df, aes(x = STATE, y = pct, fill = `CLASSIFICATION.BASED.ON.SECTOR`)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = round(pct, 1)), position = position_dodge(width = 0.9), vjust = -0.25, size = 3) +
+  scale_fill_manual(values = c("PRIMARY SECTOR" = "brown", "SECONDARY SECTOR" = "blue", "TERTIARY SECTOR" = "green")) +
+  labs(title = "Sectoral Shares: Deccan, Coastal, Peninsular",
+       x = "State", y = "Percentage", fill = "Sector") +
+  theme_minimal()
+
+
+# 3.5 North-Eastern States
+north_eastern_states <- c("Assam", "Arunachal Pradesh", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Tripura", "Sikkim")
+
+north_eastern_df <- sectordata %>%
+  filter(STATE %in% north_eastern_states &
+         `CLASSIFICATION.BASED.ON.SECTOR` %in% c("PRIMARY SECTOR", "SECONDARY SECTOR", "TERTIARY SECTOR")) %>%
+  group_by(STATE, `CLASSIFICATION.BASED.ON.SECTOR`) %>%
+  summarise(sector_total = sum(as.numeric(total_value_actuals), na.rm = TRUE), .groups = "drop") %>%
+  group_by(STATE) %>%
+  mutate(pct = sector_total / sum(sector_total) * 100) %>%
+  ungroup()
+
+ggplot(north_eastern_df, aes(x = STATE, y = pct, fill = `CLASSIFICATION.BASED.ON.SECTOR`)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = round(pct, 1)), position = position_dodge(width = 0.9), vjust = -0.25, size = 3) +
+  scale_fill_manual(values = c("PRIMARY SECTOR" = "brown", "SECONDARY SECTOR" = "blue", "TERTIARY SECTOR" = "green")) +
+  labs(title = "Sectoral Shares: North-Eastern States",
+       x = "State", y = "Percentage", fill = "Sector") +
+  theme_minimal()
+
+
 
 # 4. Scatter Plot of CAGR vs Average Tertiary Sector Percentage by Region
 # Calculate sector share percentage by state
